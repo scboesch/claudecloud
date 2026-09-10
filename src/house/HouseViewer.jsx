@@ -22,7 +22,11 @@ export default function HouseViewer() {
   const [labels, setLabels] = useState(false)
   const [spin, setSpin] = useState(false)
   const [about, setAbout] = useState(false)
-  const [factsOpen, setFactsOpen] = useState(true)
+  // On phones the record panel is a bottom sheet over the controls, so it
+  // starts closed there and open on wider screens.
+  const [factsOpen, setFactsOpen] = useState(
+    () => typeof window === 'undefined' || window.innerWidth > 900,
+  )
   const [error, setError] = useState(null)
 
   useEffect(() => {

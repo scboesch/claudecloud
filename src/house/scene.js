@@ -52,10 +52,12 @@ const DAY = [
     zenith: '#3277cc', horizon: '#c3ddf4', ground: '#8b7c62', stars: 0, glow: 0.1, exposure: 0.88 },
   { hour: 18.6, elev: 6, azim: 172, sun: '#ff8a45', sunI: 1.5, hemi: 0.44, amb: 0.11,
     zenith: '#2b4a8e', horizon: '#ff9e5e', ground: '#5e4636', stars: 0.05, glow: 0.55, exposure: 0.95 },
-  { hour: 19.5, elev: -2, azim: 182, sun: '#ff5f2e', sunI: 0.45, hemi: 0.30, amb: 0.09,
-    zenith: '#1b2a63', horizon: '#f2673c', ground: '#3a2c2c', stars: 0.3, glow: 0.9, exposure: 1.02 },
-  { hour: 21.0, elev: -12, azim: 196, sun: '#6f86c8', sunI: 0.12, hemi: 0.18, amb: 0.06,
-    zenith: '#070d24', horizon: '#1a2450', ground: '#12162c', stars: 1.0, glow: 1.0, exposure: 1.12 },
+  { hour: 19.5, elev: -2, azim: 182, sun: '#e0522a', sunI: 0.4, hemi: 0.28, amb: 0.085,
+    zenith: '#16224f', horizon: '#c9532f', ground: '#33262a', stars: 0.35, glow: 0.9, exposure: 1.0 },
+  { hour: 20.3, elev: -8, azim: 190, sun: '#7f7fb4', sunI: 0.16, hemi: 0.19, amb: 0.06,
+    zenith: '#0a1130', horizon: '#3a2b52', ground: '#191a30', stars: 0.8, glow: 1.0, exposure: 1.08 },
+  { hour: 21.0, elev: -12, azim: 196, sun: '#6f86c8', sunI: 0.11, hemi: 0.15, amb: 0.05,
+    zenith: '#050a1c', horizon: '#101a3c', ground: '#0d1122', stars: 1.0, glow: 1.0, exposure: 1.14 },
 ]
 
 function lerp(a, b, t) {
@@ -96,10 +98,10 @@ export const VIEWS = [
     pos: [36, 25, 99], target: [0, 11, 14] },
   { id: 'lake', name: 'Lakeside', blurb: 'From over the water, looking back at the pool and master balcony.',
     pos: [-31, 26, -97], target: [-2, 12, -17] },
-  { id: 'pool', name: 'Pool deck', blurb: 'From the water\'s edge, across the pool to the rear elevation.',
-    pos: [11, 8, -49], target: [-2, 11, -17] },
+  { id: 'pool', name: 'Back yard', blurb: 'Across the pool and covered patio to the rear elevation.',
+    pos: [-25, 13, -50], target: [1, 8.5, -23] },
   { id: 'entry', name: 'Front entry', blurb: 'Close on the two-story vaulted entry and garage.',
-    pos: [20, 9, 54], target: [3, 12, 20] },
+    pos: [23, 11, 58], target: [3, 12.5, 20] },
   { id: 'plan', name: 'Site plan', blurb: 'Angled overview of the whole lot in context.',
     pos: [74, 70, 92], target: [0, 7, -2] },
 ]
@@ -134,15 +136,23 @@ export function createHouseScene(THREE, container, options = {}) {
 
   /* ---------------- sky + environment ---------------- */
 
-  const SKY_W = 1024
-  const SKY_H = 512
+  const SKY_W = 1536
+  const SKY_H = 768
   const skyCanvas = document.createElement('canvas')
   skyCanvas.width = SKY_W
   skyCanvas.height = SKY_H
   const skyCtx = skyCanvas.getContext('2d')
-  const skyTex = new THREE.Texture(skyCanvas)
-  skyTex.mapping = THREE.EquirectangularReflectionMapping
-  setColorTexture(THREE, skyTex)
+  // Repainting the canvas and flagging needsUpdate is not enough here: the
+  // background keeps rendering the first sky it saw. Handing the scene a fresh
+  // texture (over the same canvas) each time the light changes is cheap and
+  // always lands.
+  function makeSkyTexture() {
+    const t = new THREE.CanvasTexture(skyCanvas)
+    t.mapping = THREE.EquirectangularReflectionMapping
+    setColorTexture(THREE, t)
+    return t
+  }
+  let skyTex = makeSkyTexture()
   scene.background = skyTex
 
   const pmrem = new THREE.PMREMGenerator(renderer)
@@ -352,15 +362,15 @@ export function createHouseScene(THREE, container, options = {}) {
     g.add(roof)
 
     // Fascia: a thin slab at the eave line reading as the sub-fascia board.
-    const f = new THREE.Mesh(new THREE.BoxGeometry(w, 0.5, d), mat.fascia)
-    f.position.y = -0.25
+    const f = new THREE.Mesh(new THREE.BoxGeometry(w - 0.15, 0.5, d - 0.15), mat.fascia)
+    f.position.y = -0.32
     f.castShadow = true
     f.receiveShadow = true
     g.add(f)
 
     // Soffit underside.
-    const s = new THREE.Mesh(new THREE.BoxGeometry(w - 0.05, 0.08, d - 0.05), mat.soffit)
-    s.position.y = -0.5
+    const s = new THREE.Mesh(new THREE.BoxGeometry(w - 0.2, 0.08, d - 0.2), mat.soffit)
+    s.position.y = -0.57
     s.receiveShadow = true
     g.add(s)
 
@@ -664,7 +674,8 @@ export function createHouseScene(THREE, container, options = {}) {
     })
     const w = 31
     addSlab(g, -w / 2, w / 2, 0, 10, frontZ - depth, frontZ, m)
-    addSlab(g, -w / 2, w / 2, 10, 19, frontZ - depth + 6, frontZ - 4, m)
+    // Wall top must meet the eave, or it shows through the roof from above.
+    addSlab(g, -w / 2, w / 2, 10, height2, frontZ - depth + 6, frontZ - 4, m)
     addRoof(g, {
       type: 'hip', w: w + 4, d: depth - 6, pitch: H.roofPitch,
       x: 0, y: height2, z: frontZ - depth / 2 + 1,
@@ -863,13 +874,13 @@ export function createHouseScene(THREE, container, options = {}) {
     return spr
   }
 
-  label('Street / front', 0, 8, M.street.curbZ - 6)
-  label('3-car garage', GD.x0 + 8, 12, H.frontZ + 6)
-  label('Vaulted entry', 7, 25, E.z1 + 4)
-  label('Pool', M.pool.centerX, 6, M.pool.centerZ)
-  label('Master balcony', 0, y1 + 8, H.rearZ - 6)
-  label('Covered patio', (P.x0 + P.x1) / 2, 3, patioZ - 3)
-  label('Lake frontage', 0, 7, rearLot - 8)
+  label('Street / front', -6, 8, M.street.curbZ - 2)
+  label('3-car garage', GD.x0 + 6, 12, H.frontZ + 9)
+  label('Vaulted entry', 15, 22, E.z1 + 5)
+  label('Pool', M.pool.centerX + 1, 6, M.pool.centerZ)
+  label('Master balcony', 13, y1 + 9, H.rearZ - 2)
+  label('Covered patio', -15, 3, patioZ + 2)
+  label('Lake frontage', 2, 7, rearLot - 9)
   labelGroup.visible = false
 
   /* ---------------- day cycle ---------------- */
@@ -902,6 +913,9 @@ export function createHouseScene(THREE, container, options = {}) {
     ambient.intensity = s.amb
     ambient.color.copy(s.horizon).lerp(new THREE.Color(0xffffff), 0.8)
     renderer.toneMappingExposure = s.exposure
+    if ('environmentIntensity' in scene) {
+      scene.environmentIntensity = 0.3 + 0.7 * Math.min(1, s.sunI / 2.2)
+    }
 
     for (const m of emissiveMats) m.emissiveIntensity = s.glow * (m === mat.poolLight ? 1.6 : 1.0)
     mat.lakeWater.envMapIntensity = 1.4 + s.glow * 1.2
@@ -916,7 +930,10 @@ export function createHouseScene(THREE, container, options = {}) {
       sunIntensity: Math.min(1, s.sunI / 2.4),
       stars: s.stars,
     })
-    skyTex.needsUpdate = true
+    const previous = skyTex
+    skyTex = makeSkyTexture()
+    scene.background = skyTex
+    previous.dispose()
     envDirty = true
   }
 
@@ -966,6 +983,7 @@ export function createHouseScene(THREE, container, options = {}) {
     const h = container.clientHeight || 1
     renderer.setSize(w, h, false)
     camera.aspect = w / h
+    camera.fov = camera.aspect < 0.85 ? 62 : 46
     camera.updateProjectionMatrix()
   }
 

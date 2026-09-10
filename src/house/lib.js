@@ -560,11 +560,12 @@ export function paintSky(ctx, W, H, params) {
   ctx.fillRect(0, 0, W, H)
 
   if (stars > 0) {
-    for (let i = 0; i < 700; i++) {
+    for (let i = 0; i < 1500; i++) {
       const y = Math.random() * H * 0.5
-      const a = stars * (0.25 + Math.random() * 0.75) * (1 - y / (H * 0.5)) ** 0.4
+      const a = stars * 0.42 * (0.2 + Math.random() * 0.8) * (1 - y / (H * 0.5)) ** 0.4
+      const r = Math.random() < 0.12 ? 1.7 : 1.1
       ctx.fillStyle = `rgba(255,255,245,${a})`
-      ctx.fillRect(Math.random() * W, y, 1.4, 1.4)
+      ctx.fillRect(Math.random() * W, y, r, r)
     }
   }
 
