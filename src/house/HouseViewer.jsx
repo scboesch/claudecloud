@@ -94,7 +94,7 @@ export default function HouseViewer() {
         <p className="title__eyebrow">3D property study</p>
         <h1>{address.street}</h1>
         <p>
-          {address.city}, {address.state} {address.zip} &middot; {address.subdivision}
+          {address.city}, {address.state} {address.zip} {'\u00b7'} {address.subdivision}
         </p>
       </header>
 
@@ -108,7 +108,7 @@ export default function HouseViewer() {
             onClick={() => setFactsOpen(false)}
             aria-label="Hide property details"
           >
-            &times;
+            {'\u00d7'}
           </button>
         </div>
         <dl>
@@ -121,7 +121,7 @@ export default function HouseViewer() {
         </dl>
       </aside>
 
-      <p className="hint">Drag to orbit &middot; scroll to zoom &middot; right-drag to pan</p>
+      <p className="hint">Drag to orbit {'\u00b7'} scroll to zoom {'\u00b7'} right-drag to pan</p>
 
       <div className="controls panel">
         <div className="views">
@@ -179,7 +179,7 @@ export default function HouseViewer() {
         <div className="sheet" role="dialog" aria-modal="true" aria-label="How this model was built" onClick={() => setAbout(false)}>
           <div className="sheet__inner" onClick={(e) => e.stopPropagation()}>
             <button type="button" className="sheet__close" onClick={() => setAbout(false)} aria-label="Close">
-              &times;
+              {'\u00d7'}
             </button>
             <h2>How this model was built</h2>
             <p>
@@ -219,8 +219,8 @@ export default function HouseViewer() {
             <p>
               three.js, rendered live in the browser. Geometry is generated procedurally in code
               from the dimensions in <code>src/house/property.js</code>, so correcting a number
-              there re-shapes the model. Textures &mdash; stucco, concrete tile, gravel, turf, pool
-              plaster, water &mdash; are all painted to canvas at runtime; there are no image
+              there re-shapes the model. Textures {'\u2014'} stucco, concrete tile, gravel, turf, pool
+              plaster, water {'\u2014'} are all painted to canvas at runtime; there are no image
               assets. Lighting runs a full dawn-to-night cycle with a procedural sky that also
               drives image-based reflections.
             </p>
